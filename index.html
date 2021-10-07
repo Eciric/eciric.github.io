@@ -5,15 +5,15 @@
         <meta http-equiv="X-UA-Compatible" content="IE=edge" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Document</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
     </head>
     <body>
-        <canvas
-            id="myCanvas"
-            width="800"
-            height="600"
-            style="border: 1px solid #000000"
-        >
-        </canvas>
+        <canvas id="myCanvas" width="800" height="600"> </canvas>
         <script>
             const c = document.getElementById("myCanvas");
             const ctx = c.getContext("2d");
@@ -21,7 +21,7 @@
             const y = canvas.height / 2;
             const radius = 35;
             ctx.beginPath();
-            ctx.arc(95, 50, 40, 0, 2 * Math.PI);
+            ctx.arc(x, y, radius, 0, 2 * Math.PI, false);
             ctx.fillStyle = "#00FF00";
             ctx.fill();
             ctx.stroke();
