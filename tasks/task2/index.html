@@ -13,22 +13,42 @@
         <script>
             const canvas = document.getElementById("myCanvas");
             const context = canvas.getContext("2d");
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 100;
-            let circleColor = "green";
-            setInterval(() => {
-                if (circleColor === "green") {
-                    circleColor = "blue";
+            let blue1 = 255,
+                green1 = 0,
+                green2 = 255,
+                blue2 = 0,
+                reverseFlag = false;
+
+            setInterval(animate, 10);
+
+            function animate() {
+                if (!reverseFlag) {
+                    blue1 -= 1;
+                    green1 += 1;
+                    blue2 += 1;
+                    green2 -= 1;
                 } else {
-                    circleColor = "green";
+                    blue1 += 1;
+                    green1 -= 1;
+                    blue2 -= 1;
+                    green2 += 1;
                 }
-                context.fillStyle = circleColor;
+
+                if (blue1 < 1 || green1 > 254) {
+                    reverseFlag = true;
+                }
+                if (blue1 > 254 || green1 < 1) {
+                    reverseFlag = false;
+                }
                 context.beginPath();
-                context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+                let grd = context.createLinearGradient(0, 0, 10, 50);
+                grd.addColorStop(0, `rgb(0,${green1},${blue1})`);
+                grd.addColorStop(1, `rgb(0,${green2},${blue2})`);
+                context.fillStyle = grd;
+                context.arc(400, 300, 100, 0, 2 * Math.PI);
                 context.fill();
                 context.stroke();
-            }, 1000);
+            }
         </script>
     </body>
 </html>
