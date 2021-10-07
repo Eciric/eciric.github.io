@@ -19,7 +19,7 @@
                 blue2 = 0,
                 posX = 400,
                 posY = 300,
-                movingUp = true,
+                movingUp = false,
                 reverseFlag = false;
 
             setInterval(animate, 10);
@@ -47,12 +47,12 @@
 
             function moveCircle() {
                 if (movingUp) {
-                    posY -= 1;
+                    posY -= 3;
                 } else {
-                    posY += 1;
+                    posY += 4;
                 }
 
-                if (posY < 100) {
+                if (posY < 200) {
                     movingUp = false;
                 }
                 if (posY > 500) {
