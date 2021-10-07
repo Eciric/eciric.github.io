@@ -18,11 +18,7 @@
             const radius = 100;
             let circleColor = "green";
             setInterval(() => {
-                if (circleColor === "green") {
-                    circleColor = "blue";
-                } else {
-                    circleColor = "green";
-                }
+                circleColor = circleColor === "green" ? "blue" : "green";
                 context.fillStyle = circleColor;
                 context.beginPath();
                 context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
