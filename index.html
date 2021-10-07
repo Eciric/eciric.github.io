@@ -9,26 +9,16 @@
         </style>
     </head>
     <body>
-        <canvas id="myCanvas" width="800" height="600"></canvas>
-        <script>
-            const canvas = document.getElementById("myCanvas");
-            const context = canvas.getContext("2d");
-            const centerX = canvas.width / 2;
-            const centerY = canvas.height / 2;
-            const radius = 100;
-            let circleColor = "green";
-            setInterval(() => {
-                if (circleColor === "green") {
-                    circleColor = "blue";
-                } else {
-                    circleColor = "green";
-                }
-                context.fillStyle = circleColor;
-                context.beginPath();
-                context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
-                context.fill();
-                context.stroke();
-            }, 1000);
-        </script>
+        <div class="container">
+            <div class="task">
+                <a href="tasks/task1/index.html">Color swap</a>
+            </div>
+            <div class="task">
+                <a href="tasks/task2/index.html">Gradient swap</a>
+            </div>
+            <div class="task">
+                <a href="tasks/task3/index.html">Gradient swap with bouncing</a>
+            </div>
+        </div>
     </body>
 </html>
