@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <script>
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d");
+            const width = 100,
+                height = 100;
+            let moving = false;
+            let ballX = 200,
+                ballY = 50;
+            const rectApexes = [
+                {
+                    x: 100,
+                    y: 100,
+                },
+                {
+                    x: 200,
+                    y: 200,
+                },
+                {
+                    x: 300,
+                    y: 300,
+                },
+                {
+                    x: 400,
+                    y: 400,
+                },
+                {
+                    x: 500,
+                    y: 500,
+                },
+            ];
+
+            async function drawStairs() {
+                for (let i = 0; i < rectApexes.length; i++) {
+                    await sleep(1000);
+                    context.beginPath();
+                    context.rect(
+                        rectApexes[i].x,
+                        rectApexes[i].y,
+                        width,
+                        height
+                    );
+                    context.fillStyle = "yellow";
+                    context.fill();
+                    context.stroke();
+                }
+            }
+
+            function sleep(ms) {
+                return new Promise((resolve) => setTimeout(resolve, ms));
+            }
+
+            async function startAnimation() {
+                await drawStairs();
+                startBall();
+            }
+
+            function moveBall() {
+                if (moving) {
+                    ballX += 1;
+                    ballY += 1;
+                }
+
+                if (ballX > 500 && ballY > 500) {
+                    moving = false;
+                }
+            }
+
+            function startBall() {
+                setInterval(animateBall, 10);
+            }
+
+            function animateBall() {
+                moveBall();
+                context.beginPath();
+                context.arc(ballX, ballY, 50, 0, 2 * Math.PI);
+                context.fillStyle = "green";
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            startAnimation();
+        </script>
+    </body>
+</html>
