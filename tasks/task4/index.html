@@ -16,7 +16,7 @@
             const width = 100,
                 height = 100;
             let moving = false;
-            let ballX = 200,
+            let ballX = 220,
                 ballY = 50;
             const rectApexes = [
                 {
@@ -42,18 +42,21 @@
             ];
 
             async function drawStairs() {
-                for (let i = 0; i < rectApexes.length; i++) {
+                for (
+                    let i = 0, j = rectApexes.length;
+                    i < rectApexes.length;
+                    i++, j--
+                ) {
                     await sleep(1000);
                     context.beginPath();
                     context.rect(
                         rectApexes[i].x,
                         rectApexes[i].y,
                         width,
-                        height
+                        height * j
                     );
                     context.fillStyle = "yellow";
                     context.fill();
-                    context.stroke();
                 }
             }
 
@@ -63,16 +66,17 @@
 
             async function startAnimation() {
                 await drawStairs();
+                moving = true;
                 startBall();
             }
 
             function moveBall() {
                 if (moving) {
-                    ballX += 1;
-                    ballY += 1;
+                    ballX += 2;
+                    ballY += 2;
                 }
 
-                if (ballX > 500 && ballY > 500) {
+                if (ballY > 545) {
                     moving = false;
                 }
             }
@@ -82,6 +86,9 @@
             }
 
             function animateBall() {
+                context.rotate((45 * Math.PI) / 180);
+                context.clearRect(0, -171, width * 10, height + 1);
+                context.rotate((-45 * Math.PI) / 180);
                 moveBall();
                 context.beginPath();
                 context.arc(ballX, ballY, 50, 0, 2 * Math.PI);
@@ -89,6 +96,39 @@
                 context.fill();
                 context.stroke();
                 context.closePath();
+            }
+
+            function clearAboveStairs() {
+                context.clearRect(
+                    rectApexes[0].x,
+                    rectApexes[0].y - height,
+                    width,
+                    height
+                );
+                context.clearRect(
+                    rectApexes[1].x,
+                    rectApexes[1].y - height * 2,
+                    width,
+                    height * 2
+                );
+                context.clearRect(
+                    rectApexes[2].x,
+                    rectApexes[2].y - height * 3,
+                    width,
+                    height * 3
+                );
+                context.clearRect(
+                    rectApexes[3].x,
+                    rectApexes[3].y - height * 4,
+                    width,
+                    height * 4
+                );
+                context.clearRect(
+                    rectApexes[4].x,
+                    rectApexes[4].y - height * 5,
+                    width,
+                    height * 5
+                );
             }
 
             startAnimation();
