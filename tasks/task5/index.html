@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <script>
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d");
+
+            const keycodes = {
+                space: 32,
+                left: 37,
+                right: 39,
+            };
+
+            const playerWidth = 50;
+            const playerHeight = 50;
+
+            const playerY = 550;
+            let playerX = 375;
+
+            canvas.style.background = "lightblue";
+
+            const projectiles = [];
+
+            document.onkeydown = playerAction;
+
+            setInterval(() => {
+                renderPlayer();
+                projectiles.forEach((projectile) => {
+                    projectile.renderProjectile();
+                });
+            }, 10);
+
+            function renderPlayer() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.beginPath();
+                context.fillStyle = "green";
+                context.rect(playerX, playerY, playerWidth, playerHeight);
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function playerAction(e) {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.left) {
+                    movePlayerLeft();
+                } else if (e.keyCode == keycodes.right) {
+                    movePlayerRight();
+                } else if (e.keyCode == keycodes.space) {
+                    shootProjectile();
+                }
+            }
+
+            function movePlayerLeft() {
+                if (playerX > 0) {
+                    playerX -= 10;
+                }
+            }
+
+            function movePlayerRight() {
+                if (playerX < canvas.width - playerWidth) {
+                    playerX += 10;
+                }
+            }
+
+            function shootProjectile() {
+                projectiles.push(new Projectile());
+            }
+
+            class Projectile {
+                constructor() {
+                    this.radius = 5;
+                    this.projectileX = playerX;
+                    this.projectileY = playerY;
+                }
+
+                moveProjectile() {
+                    this.projectileY -= 15;
+                }
+
+                renderProjectile() {
+                    context.beginPath();
+                    this.moveProjectile();
+                    context.fillStyle = "red";
+                    context.arc(
+                        this.projectileX,
+                        this.projectileY,
+                        this.radius,
+                        0,
+                        2 * Math.PI
+                    );
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+        </script>
+    </body>
+</html>
