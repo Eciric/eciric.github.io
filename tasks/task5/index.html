@@ -29,6 +29,7 @@
             canvas.style.background = "lightblue";
 
             const projectiles = [];
+            const aliens = [];
 
             document.onkeydown = playerAction;
 
@@ -37,7 +38,15 @@
                 projectiles.forEach((projectile) => {
                     projectile.renderProjectile();
                 });
+                aliens.forEach((alien) => {
+                    alien.renderAlien();
+                });
+                checkCollisions();
             }, 10);
+
+            setInterval(() => {
+                spawnAlien();
+            }, 1000);
 
             function renderPlayer() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -63,13 +72,13 @@
 
             function movePlayerLeft() {
                 if (playerX > 0) {
-                    playerX -= 10;
+                    playerX -= 15;
                 }
             }
 
             function movePlayerRight() {
                 if (playerX < canvas.width - playerWidth) {
-                    playerX += 10;
+                    playerX += 15;
                 }
             }
 
@@ -77,11 +86,81 @@
                 projectiles.push(new Projectile());
             }
 
+            function spawnAlien() {
+                if (getRandomInt(0, 100) > 50) {
+                    aliens.push(new Alien());
+                }
+            }
+
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+            }
+
+            function getRandomColor() {
+                return (
+                    "#" +
+                    (0x1000000 + Math.random() * 0xffffff)
+                        .toString(16)
+                        .substr(1, 6)
+                );
+            }
+
+            function checkCollisions() {
+                aliens.forEach((alien) => {
+                    projectiles.forEach((projectile) => {
+                        if (isColliding(alien, projectile)) {
+                            deleteAlien(alien);
+                            deleteProjectile(projectile);
+                        }
+                    });
+                });
+            }
+
+            function isColliding(alien, projectile) {
+                var dx =
+                    alien.getX() +
+                    alien.getRadius() -
+                    (projectile.getX() + projectile.getRadius());
+                var dy =
+                    alien.getY() +
+                    alien.getRadius() -
+                    (projectile.getY() + projectile.getRadius());
+                var distance = Math.sqrt(dx * dx + dy * dy);
+
+                return distance < alien.getRadius() + projectile.getRadius();
+            }
+
+            function deleteAlien(alien) {
+                const index = aliens.indexOf(alien);
+                aliens.splice(index, 1);
+                delete alien;
+            }
+
+            function deleteProjectile(projectile) {
+                const index = projectiles.indexOf(projectile);
+                projectiles.splice(index, 1);
+                delete projectile;
+            }
+
             class Projectile {
                 constructor() {
                     this.radius = 5;
-                    this.projectileX = playerX;
+                    this.projectileX = playerX + playerWidth / 2;
                     this.projectileY = playerY;
+                }
+
+                getRadius() {
+                    return this.radius;
+                }
+
+                getY() {
+                    return this.projectileY;
+                }
+
+                getX() {
+                    return this.projectileX;
                 }
 
                 moveProjectile() {
@@ -95,6 +174,51 @@
                     context.arc(
                         this.projectileX,
                         this.projectileY,
+                        this.radius,
+                        0,
+                        2 * Math.PI
+                    );
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Alien {
+                constructor() {
+                    this.radius = getRandomInt(25, 100);
+                    this.color = getRandomColor();
+                    this.speed = getRandomInt(1, 7);
+                    this.alienX = getRandomInt(0, canvas.width - this.radius);
+                    this.alienY = getRandomInt(
+                        -75 - this.radius,
+                        -25 - this.radius
+                    );
+                }
+
+                getRadius() {
+                    return this.radius;
+                }
+
+                getY() {
+                    return this.alienY;
+                }
+
+                getX() {
+                    return this.alienX;
+                }
+
+                moveAlien() {
+                    this.alienY += this.speed;
+                }
+
+                renderAlien() {
+                    context.beginPath();
+                    this.moveAlien();
+                    context.fillStyle = this.color;
+                    context.arc(
+                        this.alienX,
+                        this.alienY,
                         this.radius,
                         0,
                         2 * Math.PI
