@@ -28,6 +28,8 @@
 
             canvas.style.background = "lightblue";
 
+            let points = 0;
+
             const projectiles = [];
             const aliens = [];
 
@@ -35,6 +37,7 @@
 
             setInterval(() => {
                 renderPlayer();
+                renderPoints();
                 projectiles.forEach((projectile) => {
                     projectile.renderProjectile();
                 });
@@ -47,6 +50,11 @@
             setInterval(() => {
                 spawnAlien();
             }, 1000);
+
+            function renderPoints() {
+                context.font = "48px serif";
+                context.fillText(points, 10, 50);
+            }
 
             function renderPlayer() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
@@ -111,6 +119,7 @@
                 aliens.forEach((alien) => {
                     projectiles.forEach((projectile) => {
                         if (isColliding(alien, projectile)) {
+                            points++;
                             deleteAlien(alien);
                             deleteProjectile(projectile);
                         }
