@@ -127,19 +127,10 @@
                 });
             }
 
-            function isColliding(alien, projectile) {
-                var dx =
-                    alien.getX() +
-                    alien.getRadius() -
-                    (projectile.getX() + projectile.getRadius());
-                var dy =
-                    alien.getY() +
-                    alien.getRadius() -
-                    (projectile.getY() + projectile.getRadius());
-                var distance = Math.sqrt(dx * dx + dy * dy);
-
-                return distance < alien.getRadius() + projectile.getRadius();
-            }
+            const isColliding = (alien, projectile) =>
+                (alien.getRadius() + projectile.getRadius()) ** 2 >
+                (alien.getX() - projectile.getX()) ** 2 +
+                    (alien.getY() - projectile.getY()) ** 2;
 
             function deleteAlien(alien) {
                 const index = aliens.indexOf(alien);
