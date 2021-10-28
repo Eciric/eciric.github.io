@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <script>
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d");
+
+            const keycodes = {
+                left: 37,
+                right: 39,
+            };
+
+            const playerWidth = 50;
+            const playerHeight = 50;
+
+            const playerY = 550;
+            let playerX = 375;
+
+            canvas.style.background = "black";
+
+            let points = 0;
+
+            const obstacles = [];
+            const roadStripes = [];
+
+            document.onkeydown = playerAction;
+
+            setInterval(() => {
+                renderPlayer();
+                roadStripes.forEach((roadStripe) => {
+                    roadStripe.render();
+                });
+
+                obstacles.forEach((obstacle) => {
+                    obstacle.render();
+                });
+                // checkCollisions();
+            }, 10);
+
+            setInterval(() => {
+                spawnRoadStripes();
+            }, 1000);
+
+            function renderPlayer() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.beginPath();
+                context.fillStyle = "green";
+                context.rect(playerX, playerY, playerWidth, playerHeight);
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function playerAction(e) {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.left) {
+                    movePlayerLeft();
+                } else if (e.keyCode == keycodes.right) {
+                    movePlayerRight();
+                }
+            }
+
+            function movePlayerLeft() {
+                if (playerX > 0) {
+                    playerX -= 15;
+                }
+            }
+
+            function movePlayerRight() {
+                if (playerX < canvas.width - playerWidth) {
+                    playerX += 15;
+                }
+            }
+
+            function spawnRoadStripes() {
+                if (getRandomInt(0, 100) > 50) {
+                    roadStripes.push(new RoadStripe(10));
+                    roadStripes.push(new RoadStripe(context.width / 2));
+                    roadStripes.push(new RoadStripe(context.width - 10));
+                }
+            }
+
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+            }
+
+            function checkCollisions() {
+                aliens.forEach((alien) => {
+                    projectiles.forEach((projectile) => {
+                        if (isColliding(alien, projectile)) {
+                            points++;
+                            deleteAlien(alien);
+                            deleteProjectile(projectile);
+                        }
+                    });
+                });
+            }
+
+            const isColliding = (alien, projectile) =>
+                (alien.getRadius() + projectile.getRadius()) ** 2 >
+                (alien.getX() - projectile.getX()) ** 2 +
+                    (alien.getY() - projectile.getY()) ** 2;
+
+            function deleteRoadStrip(roadStrip) {
+                const index = roadStrips.indexOf(roadStrip);
+                roadStrips.splice(index, 1);
+                delete roadStrip;
+            }
+
+            function deleteObstacle(obstacle) {
+                const index = obstacles.indexOf(obstacle);
+                obstacles.splice(index, 1);
+                delete obstacle;
+            }
+
+            class RoadStrip {
+                constructor(x, color) {
+                    this.x = x;
+                    this.color = color;
+                    this.y = roadStripStartingY;
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.y += 15;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(
+                        this.x,
+                        this.y,
+                        roadStripeWidth,
+                        roadStripeHeight
+                    );
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Obstacle {
+                constructor() {
+                    this.color = getRandomColor();
+                    this.speed = getRandomInt(1, 7);
+                    this.width = 50;
+                    this.height = 50;
+                    this.x =
+                        (getRandomInt(0, 1) * canvas.width) / 2 +
+                        roadStripeWidth;
+                    this.y = getRandomInt(-75, -25);
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.y += this.speed;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+        </script>
+    </body>
+</html>
