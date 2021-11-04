@@ -18,6 +18,8 @@
                 space: 32,
                 left: 37,
                 right: 39,
+                up: 38,
+                down: 40,
             };
 
             const roadStripeWidth = 50;
@@ -31,6 +33,8 @@
 
             let points = 0;
             let bonusesPickedUp = 0;
+
+            let speedAdjuster = 0;
 
             canvas.style.background = "gray";
 
@@ -48,6 +52,12 @@
                     direction = "left";
                 } else if (e.keyCode == keycodes.right) {
                     direction = "right";
+                } else if (e.keyCode == keycodes.up) {
+                    console.log("up");
+                    increaseAdjuster();
+                } else if (e.keyCode == keycodes.down) {
+                    console.log("down");
+                    decreaseAdjuster();
                 }
             };
 
@@ -78,14 +88,15 @@
             }, 10);
 
             function movePlayerLeft() {
+                console.log(speedAdjuster);
                 if (playerX > roadStripeWidth) {
-                    playerX -= 10;
+                    playerX -= 10 + speedAdjuster;
                 }
             }
 
             function movePlayerRight() {
                 if (playerX < canvas.width - playerWidth - roadStripeWidth) {
-                    playerX += 10;
+                    playerX += 10 + speedAdjuster;
                 }
             }
 
@@ -130,6 +141,14 @@
                 spawnObstacles();
                 spawnBonus();
             }, 500);
+
+            function increaseAdjuster() {
+                if (speedAdjuster < 5) speedAdjuster += 1;
+            }
+
+            function decreaseAdjuster() {
+                if (speedAdjuster > -5) speedAdjuster -= 1;
+            }
 
             function renderPlayer() {
                 context.beginPath();
@@ -361,7 +380,7 @@
                 }
 
                 move() {
-                    this.y += 10;
+                    this.y += 10 + speedAdjuster;
                 }
 
                 render() {
