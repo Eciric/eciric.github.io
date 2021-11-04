@@ -103,8 +103,19 @@
                     projectile.renderProjectile();
                 });
                 renderPlayer();
+                renderPoints();
                 checkCollisions();
             }, 10);
+
+            function renderPoints() {
+                context.font = "48px serif";
+                context.fillText(`Points: ${points}`, 10, 50);
+            }
+
+            function renderBonuses() {
+                context.font = "48px serif";
+                context.fillText(`Bonuses: ${bonusesPickedUp}`, 10, 50);
+            }
 
             const spawnerIntervalId = setInterval(() => {
                 spawnRoadStripes();
