@@ -30,12 +30,14 @@
             let playerX = 375;
 
             let points = 0;
+            let bonusesPickedUp = 0;
 
             canvas.style.background = "gray";
 
             const obstacles = [];
             const roadStripes = [];
             const projectiles = [];
+            const bonuses = [];
 
             let direction = "";
 
@@ -94,6 +96,11 @@
                     checkRoadStripeBoundaries(roadStripe);
                 });
 
+                bonuses.forEach((bonus) => {
+                    bonus.render();
+                    checkBonusBoundaries(bonus);
+                });
+
                 obstacles.forEach((obstacle) => {
                     obstacle.render();
                     checkObstacleBoundaries(obstacle);
@@ -104,6 +111,7 @@
                 });
                 renderPlayer();
                 renderPoints();
+                renderBonuses();
                 checkCollisions();
             }, 10);
 
@@ -114,12 +122,13 @@
 
             function renderBonuses() {
                 context.font = "48px serif";
-                context.fillText(`Bonuses: ${bonusesPickedUp}`, 10, 50);
+                context.fillText(`Bonuses: ${bonusesPickedUp}`, 10, 100);
             }
 
             const spawnerIntervalId = setInterval(() => {
                 spawnRoadStripes();
                 spawnObstacles();
+                spawnBonus();
             }, 500);
 
             function renderPlayer() {
@@ -203,6 +212,12 @@
                 }
             }
 
+            function checkBonusBoundaries(bonus) {
+                if (bonus.y > canvas.height) {
+                    deleteBonus(bonus);
+                }
+            }
+
             function renderSideLines() {
                 context.clearRect(0, 0, canvas.width, canvas.height);
                 context.beginPath();
@@ -239,6 +254,13 @@
                         }
                     });
                 });
+
+                bonuses.forEach((bonus) => {
+                    if (playerOnBonus(bonus)) {
+                        deleteBonus(bonus);
+                        bonusesPickedUp++;
+                    }
+                });
             }
 
             const hitObstacle = (projectile, obstacle) => {
@@ -249,6 +271,15 @@
                     projectile.y + projectile.height > obstacle.y
                 );
             };
+
+            function playerOnBonus(bonus) {
+                return (
+                    playerX < bonus.x + bonus.width &&
+                    playerX + playerWidth > bonus.x &&
+                    playerY < bonus.y + bonus.height &&
+                    playerY + playerHeight > bonus.y
+                );
+            }
 
             function deleteProjectile(projectile) {
                 const index = projectiles.indexOf(projectile);
@@ -281,6 +312,12 @@
                 }
             }
 
+            function spawnBonus() {
+                if (getRandomInt(0, 100) > 75) {
+                    bonuses.push(new Bonus());
+                }
+            }
+
             function getRandomColor() {
                 return (
                     "#" +
@@ -300,6 +337,12 @@
                 const index = obstacles.indexOf(obstacle);
                 obstacles.splice(index, 1);
                 delete obstacle;
+            }
+
+            function deleteBonus(bonus) {
+                const index = bonuses.indexOf(bonus);
+                bonuses.splice(index, 1);
+                delete bonus;
             }
 
             class RoadStripe {
@@ -389,6 +432,29 @@
                     context.beginPath();
                     this.moveProjectile();
                     context.fillStyle = "yellow";
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Bonus {
+                constructor() {
+                    this.width = 30;
+                    this.height = 30;
+                    this.x = getRandomInt(100, 470);
+                    this.y = getRandomInt(-75, -25);
+                }
+
+                moveBonus() {
+                    this.y += 6;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.moveBonus();
+                    context.fillStyle = "orange";
                     context.rect(this.x, this.y, this.width, this.height);
                     context.fill();
                     context.stroke();
