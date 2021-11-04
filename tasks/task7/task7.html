@@ -29,6 +29,8 @@
             const playerY = 500;
             let playerX = 375;
 
+            let points = 0;
+
             canvas.style.background = "gray";
 
             const obstacles = [];
@@ -37,11 +39,53 @@
 
             let direction = "";
 
-            document.onkeydown = playerAction;
+            document.onkeydown = (e) => {
+                e = e || window.event;
 
-            document.onkeyup = () => {
-                direction = "";
+                if (e.keyCode == keycodes.left) {
+                    direction = "left";
+                } else if (e.keyCode == keycodes.right) {
+                    direction = "right";
+                }
             };
+
+            document.onkeyup = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.left) {
+                    direction = "";
+                } else if (e.keyCode == keycodes.right) {
+                    direction = "";
+                }
+            };
+
+            document.onkeypress = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.space) {
+                    shootProjectile();
+                }
+            };
+
+            setInterval(() => {
+                if (direction === "left") {
+                    movePlayerLeft();
+                } else if (direction === "right") {
+                    movePlayerRight();
+                }
+            }, 10);
+
+            function movePlayerLeft() {
+                if (playerX > roadStripeWidth) {
+                    playerX -= 10;
+                }
+            }
+
+            function movePlayerRight() {
+                if (playerX < canvas.width - playerWidth - roadStripeWidth) {
+                    playerX += 10;
+                }
+            }
 
             const mainIntervalId = setInterval(() => {
                 renderSideLines();
@@ -122,38 +166,6 @@
                 context.closePath();
             }
 
-            function playerAction(e) {
-                e = e || window.event;
-
-                if (e.keyCode == keycodes.left) {
-                    direction = "left";
-                } else if (e.keyCode == keycodes.right) {
-                    direction = "right";
-                } else if (e.keyCode == keycodes.space) {
-                    shootProjectile();
-                }
-            }
-
-            setInterval(() => {
-                if (direction === "left") {
-                    movePlayerLeft();
-                } else if (direction === "right") {
-                    movePlayerRight();
-                }
-            }, 10);
-
-            function movePlayerLeft() {
-                if (playerX > roadStripeWidth) {
-                    playerX -= 10;
-                }
-            }
-
-            function movePlayerRight() {
-                if (playerX < canvas.width - playerWidth - roadStripeWidth) {
-                    playerX += 10;
-                }
-            }
-
             function shootProjectile() {
                 projectiles.push(new Projectile());
             }
@@ -169,13 +181,13 @@
             }
 
             function checkRoadStripeBoundaries(roadStripe) {
-                if (roadStripe.getY() > canvas.height) {
+                if (roadStripe.y > canvas.height) {
                     deleteRoadStripe(roadStripe);
                 }
             }
 
             function checkObstacleBoundaries(obstacle) {
-                if (obstacle.getY() > canvas.height) {
+                if (obstacle.y > canvas.height) {
                     deleteObstacle(obstacle);
                 }
             }
@@ -206,6 +218,31 @@
                         displayDefeat();
                     }
                 });
+
+                projectiles.forEach((projectile) => {
+                    obstacles.forEach((obstacle) => {
+                        if (hitObstacle(projectile, obstacle)) {
+                            deleteObstacle(obstacle);
+                            deleteProjectile(projectile);
+                            points++;
+                        }
+                    });
+                });
+            }
+
+            const hitObstacle = (projectile, obstacle) => {
+                return (
+                    projectile.x < obstacle.x + obstacle.width &&
+                    projectile.x + projectile.width > obstacle.x &&
+                    projectile.y < obstacle.y + obstacle.height &&
+                    projectile.y + projectile.height > obstacle.y
+                );
+            };
+
+            function deleteProjectile(projectile) {
+                const index = projectiles.indexOf(projectile);
+                projectiles.splice(index, 1);
+                delete projectile;
             }
 
             function displayDefeat() {
@@ -220,10 +257,10 @@
 
             const isColliding = (obstacle) => {
                 return (
-                    playerX < obstacle.getX() + obstacle.width &&
-                    playerX + playerWidth > obstacle.getX() &&
-                    playerY < obstacle.getY() + obstacle.height &&
-                    playerHeight + playerY > obstacle.getY()
+                    playerX < obstacle.x + obstacle.width &&
+                    playerX + playerWidth > obstacle.x &&
+                    playerY < obstacle.y + obstacle.height &&
+                    playerHeight + playerY > obstacle.y
                 );
             };
 
@@ -327,38 +364,21 @@
 
             class Projectile {
                 constructor() {
-                    this.radius = 5;
-                    this.projectileX = playerX + playerWidth / 2;
-                    this.projectileY = playerY;
-                }
-
-                getRadius() {
-                    return this.radius;
-                }
-
-                getY() {
-                    return this.projectileY;
-                }
-
-                getX() {
-                    return this.projectileX;
+                    this.width = 5;
+                    this.height = 15;
+                    this.x = playerX + playerWidth / 2;
+                    this.y = playerY;
                 }
 
                 moveProjectile() {
-                    this.projectileY -= 15;
+                    this.y -= 15;
                 }
 
                 renderProjectile() {
                     context.beginPath();
                     this.moveProjectile();
-                    context.fillStyle = "red";
-                    context.arc(
-                        this.projectileX,
-                        this.projectileY,
-                        this.radius,
-                        0,
-                        2 * Math.PI
-                    );
+                    context.fillStyle = "yellow";
+                    context.rect(this.x, this.y, this.width, this.height);
                     context.fill();
                     context.stroke();
                     context.closePath();
