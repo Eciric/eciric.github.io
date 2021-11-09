@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                background-color: gray;
+            }
+
+            canvas {
+                display: block;
+
+                position: absolute;
+                top: 0;
+                bottom: 0;
+                left: 0;
+                right: 0;
+
+                padding: 0;
+                margin: auto;
+
+                width: 800px;
+                height: 600px;
+            }
+
+            .animate {
+                animation: spin 20s alternate infinite;
+            }
+
+            @keyframes spin {
+                0% {
+                    transform: rotateZ(0deg);
+                }
+                25% {
+                    transform: rotateZ(30deg);
+                }
+                50% {
+                    transform: rotateZ(0deg);
+                }
+                75% {
+                    transform: rotateZ(-30deg);
+                }
+                100% {
+                    transform: rotateZ(0deg);
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" class="animate" width="800" height="600"></canvas>
+        <script>
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d");
+
+            const keycodes = {
+                space: 32,
+                left: 37,
+                right: 39,
+                up: 38,
+                down: 40,
+                a: 65,
+                z: 90,
+            };
+
+            const roadStripeWidth = 50;
+            const roadStripeHeight = 100;
+
+            const playerWidth = 100;
+            const playerHeight = 150;
+
+            let playerY = 500;
+            let playerX = 375;
+
+            let points = 0;
+            let bonusesPickedUp = 0;
+
+            let speedAdjuster = 0;
+
+            canvas.style.background = "gray";
+
+            const obstacles = [];
+            const roadStripes = [];
+            const projectiles = [];
+            const bonuses = [];
+
+            let direction = "";
+
+            document.onkeydown = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.left) {
+                    direction = "left";
+                } else if (e.keyCode == keycodes.right) {
+                    direction = "right";
+                } else if (e.keyCode == keycodes.up) {
+                    direction = "up";
+                } else if (e.keyCode == keycodes.down) {
+                    direction = "down";
+                } else if (e.keyCode == keycodes.a) {
+                    increaseAdjuster();
+                } else if (e.keyCode == keycodes.z) {
+                    decreaseAdjuster();
+                }
+            };
+
+            document.onkeyup = (e) => {
+                e = e || window.event;
+                if (
+                    [
+                        keycodes.left,
+                        keycodes.right,
+                        keycodes.up,
+                        keycodes.down,
+                    ].includes(e.keyCode)
+                ) {
+                    direction = "";
+                }
+            };
+
+            document.onkeypress = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.space) {
+                    shootProjectile();
+                }
+            };
+
+            setInterval(() => {
+                if (direction === "left") {
+                    movePlayerLeft();
+                } else if (direction === "right") {
+                    movePlayerRight();
+                } else if (direction === "up") {
+                    movePlayerUp();
+                } else if (direction === "down") {
+                    movePlayerDown();
+                }
+            }, 10);
+
+            function movePlayerLeft() {
+                if (playerX > roadStripeWidth) {
+                    playerX -= 10 + speedAdjuster;
+                }
+            }
+
+            function movePlayerRight() {
+                if (playerX < canvas.width - playerWidth - roadStripeWidth) {
+                    playerX += 10 + speedAdjuster;
+                }
+            }
+
+            function movePlayerUp() {
+                if (playerY > 0) {
+                    playerY -= 10 + speedAdjuster;
+                }
+            }
+
+            function movePlayerDown() {
+                if (playerY < canvas.height - playerHeight) {
+                    playerY += 10 + speedAdjuster;
+                }
+            }
+
+            const mainIntervalId = setInterval(() => {
+                renderSideLines();
+                roadStripes.forEach((roadStripe) => {
+                    roadStripe.render();
+                    checkRoadStripeBoundaries(roadStripe);
+                });
+
+                bonuses.forEach((bonus) => {
+                    bonus.render();
+                    checkBonusBoundaries(bonus);
+                });
+
+                obstacles.forEach((obstacle) => {
+                    obstacle.render();
+                    checkObstacleBoundaries(obstacle);
+                });
+
+                projectiles.forEach((projectile) => {
+                    projectile.renderProjectile();
+                });
+                renderPlayer();
+                renderPoints();
+                renderBonuses();
+                renderAdjuster();
+                checkCollisions();
+            }, 10);
+
+            function renderPoints() {
+                context.font = "36px serif";
+                context.fillText(`Points: ${points}`, 10, 40);
+            }
+
+            function renderBonuses() {
+                context.font = "36px serif";
+                context.fillText(`Bonuses: ${bonusesPickedUp}`, 10, 90);
+            }
+
+            function renderAdjuster() {
+                context.font = "36px serif";
+                context.fillText(`Speed adjuster: ${speedAdjuster}`, 10, 140);
+            }
+
+            const spawnerIntervalId = setInterval(() => {
+                spawnRoadStripes();
+                spawnObstacles();
+                spawnBonus();
+            }, 500);
+
+            function increaseAdjuster() {
+                if (speedAdjuster < 5) speedAdjuster += 1;
+            }
+
+            function decreaseAdjuster() {
+                if (speedAdjuster > -5) speedAdjuster -= 1;
+            }
+
+            function renderPlayer() {
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(playerX + 5, playerY + 20, 20, 0, 2 * Math.PI);
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(
+                    playerX + playerWidth - 5,
+                    playerY + 20,
+                    20,
+                    0,
+                    2 * Math.PI
+                );
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(
+                    playerX + 5,
+                    playerY - 60 + playerHeight,
+                    20,
+                    0,
+                    2 * Math.PI
+                );
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(
+                    playerX + playerWidth - 5,
+                    playerY - 60 + playerHeight,
+                    20,
+                    0,
+                    2 * Math.PI
+                );
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "green";
+                context.rect(playerX, playerY, playerWidth, playerHeight);
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function shootProjectile() {
+                projectiles.push(new Projectile());
+            }
+
+            function spawnRoadStripes() {
+                roadStripes.push(new RoadStripe(0));
+                roadStripes.push(
+                    new RoadStripe(canvas.width / 2 - roadStripeWidth / 2)
+                );
+                roadStripes.push(
+                    new RoadStripe(canvas.width - roadStripeWidth)
+                );
+            }
+
+            function checkRoadStripeBoundaries(roadStripe) {
+                if (roadStripe.y > canvas.height) {
+                    deleteRoadStripe(roadStripe);
+                }
+            }
+
+            function checkObstacleBoundaries(obstacle) {
+                if (obstacle.y > canvas.height) {
+                    deleteObstacle(obstacle);
+                }
+            }
+
+            function checkBonusBoundaries(bonus) {
+                if (bonus.y > canvas.height) {
+                    deleteBonus(bonus);
+                }
+            }
+
+            function renderSideLines() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.beginPath();
+                context.fillStyle = "red";
+                context.rect(0, 0, 50, canvas.height);
+                context.rect(canvas.width - 50, 0, 50, canvas.height);
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+            }
+
+            function checkCollisions() {
+                obstacles.forEach((obstacle) => {
+                    if (isColliding(obstacle)) {
+                        deleteObstacle(obstacle);
+                        clearInterval(mainIntervalId);
+                        clearInterval(spawnerIntervalId);
+                        displayDefeat();
+                    }
+                });
+
+                projectiles.forEach((projectile) => {
+                    obstacles.forEach((obstacle) => {
+                        if (hitObstacle(projectile, obstacle)) {
+                            deleteObstacle(obstacle);
+                            deleteProjectile(projectile);
+                            points++;
+                        }
+                    });
+                });
+
+                bonuses.forEach((bonus) => {
+                    if (playerOnBonus(bonus)) {
+                        deleteBonus(bonus);
+                        bonusesPickedUp++;
+                    }
+                });
+            }
+
+            const hitObstacle = (projectile, obstacle) => {
+                return (
+                    projectile.x < obstacle.x + obstacle.width &&
+                    projectile.x + projectile.width > obstacle.x &&
+                    projectile.y < obstacle.y + obstacle.height &&
+                    projectile.y + projectile.height > obstacle.y
+                );
+            };
+
+            function playerOnBonus(bonus) {
+                return (
+                    playerX < bonus.x + bonus.width &&
+                    playerX + playerWidth > bonus.x &&
+                    playerY < bonus.y + bonus.height &&
+                    playerY + playerHeight > bonus.y
+                );
+            }
+
+            function deleteProjectile(projectile) {
+                const index = projectiles.indexOf(projectile);
+                projectiles.splice(index, 1);
+                delete projectile;
+            }
+
+            function displayDefeat() {
+                context.font = "48px serif";
+                context.fillStyle = "red";
+                context.fillText(
+                    "Defeat",
+                    canvas.width / 2 - 50,
+                    canvas.height / 2
+                );
+            }
+
+            const isColliding = (obstacle) => {
+                return (
+                    playerX < obstacle.x + obstacle.width &&
+                    playerX + playerWidth > obstacle.x &&
+                    playerY < obstacle.y + obstacle.height &&
+                    playerHeight + playerY > obstacle.y
+                );
+            };
+
+            function spawnObstacles() {
+                if (getRandomInt(0, 100) > 75) {
+                    if (obstacles.length < 4) obstacles.push(new Obstacle());
+                }
+            }
+
+            function spawnBonus() {
+                if (getRandomInt(0, 100) > 75) {
+                    bonuses.push(new Bonus());
+                }
+            }
+
+            function getRandomColor() {
+                return (
+                    "#" +
+                    (0x1000000 + Math.random() * 0xffffff)
+                        .toString(16)
+                        .substr(1, 6)
+                );
+            }
+
+            function deleteRoadStripe(roadStripe) {
+                const index = roadStripes.indexOf(roadStripe);
+                roadStripes.splice(index, 1);
+                delete roadStripe;
+            }
+
+            function deleteObstacle(obstacle) {
+                const index = obstacles.indexOf(obstacle);
+                obstacles.splice(index, 1);
+                delete obstacle;
+            }
+
+            function deleteBonus(bonus) {
+                const index = bonuses.indexOf(bonus);
+                bonuses.splice(index, 1);
+                delete bonus;
+            }
+
+            class RoadStripe {
+                constructor(x) {
+                    this.x = x;
+                    this.color = "white";
+                    this.y = 0 - roadStripeHeight;
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.y += 10 + speedAdjuster;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(
+                        this.x,
+                        this.y,
+                        roadStripeWidth,
+                        roadStripeHeight
+                    );
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Obstacle {
+                constructor() {
+                    this.color = getRandomColor();
+                    this.speed = getRandomInt(1, 3);
+                    this.width = 200;
+                    this.height = 50;
+                    this.x =
+                        (getRandomInt(0, 2) * canvas.width) / 2 +
+                        roadStripeWidth +
+                        getRandomInt(0, 50);
+                    this.y = getRandomInt(-75, -25);
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.y += this.speed;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Projectile {
+                constructor() {
+                    this.width = 5;
+                    this.height = 15;
+                    this.x = playerX + playerWidth / 2;
+                    this.y = playerY;
+                }
+
+                moveProjectile() {
+                    this.y -= 15;
+                }
+
+                renderProjectile() {
+                    context.beginPath();
+                    this.moveProjectile();
+                    context.fillStyle = "yellow";
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Bonus {
+                constructor() {
+                    this.width = 30;
+                    this.height = 30;
+                    this.x = getRandomInt(100, 470);
+                    this.y = getRandomInt(-75, -25);
+                }
+
+                moveBonus() {
+                    this.y += 6;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.moveBonus();
+                    context.fillStyle = "orange";
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+        </script>
+    </body>
+</html>
