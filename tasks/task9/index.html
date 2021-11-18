@@ -28,11 +28,6 @@
             const playerX = 50;
             const jumpHeight = playerY - 350;
 
-            let points = 0;
-            let bonusesPickedUp = 0;
-
-            let speedAdjuster = 0;
-
             let falling = false;
             let jumpIntervalId = null;
             canvas.style.background = "gray";
@@ -78,11 +73,6 @@
                 renderPlayer();
                 checkCollisions();
             }, 10);
-
-            function renderPoints() {
-                context.font = "48px serif";
-                context.fillText(`Points: ${points}`, 10, 50);
-            }
 
             const spawnerIntervalId = setInterval(() => {
                 spawnRoadStripes();
@@ -216,21 +206,6 @@
                 obstacles.splice(index, 1);
                 delete obstacle;
             }
-
-            // function pickObstacleStartingPosition() {
-            //     let x = canvas.width + 50;
-            //     while (true) {
-            //         for (let i = 0; i < obstacles.length; i++) {
-            //             if (
-            //                 x > obstacle.x &&
-            //                 x < obstacle.x + obstacle.width + 150
-            //             ) {
-            //                 x = getRandomInt(canvas.width, canvas.width + 700);
-            //                 break;
-            //             }
-            //         }
-            //     }
-            // }
 
             class RoadStripe {
                 constructor() {
