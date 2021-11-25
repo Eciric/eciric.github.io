@@ -25,7 +25,7 @@
             const playerWidth = 150;
             const playerHeight = 75;
 
-            let playerY = 465;
+            let playerY = 475;
             const playerX = 50;
             const jumpHeight = playerY - 350;
 
@@ -37,6 +37,9 @@
             const obstacles = [];
             const roadStripes = [];
             const projectiles = [];
+
+            let carImg = new Image();
+            carImg.src = "car.png";
 
             document.onkeyup = (e) => {
                 e = e || window.event;
@@ -50,7 +53,7 @@
                                 falling = true;
                                 playerY += 5;
 
-                                if (playerY === 465) {
+                                if (playerY === 475) {
                                     clearInterval(jumpIntervalId);
                                     jumpIntervalId = null;
                                     falling = false;
@@ -61,11 +64,13 @@
                 }
             };
 
-            document.onkeypress = (e) => {
+            document.onkeydown = (e) => {
                 e = e || window.event;
 
                 if (e.keyCode == keycodes.c) {
                     shootProjectile();
+                    let shoot = new Audio("shoot.mp3");
+                    shoot.play();
                 }
             };
 
@@ -86,6 +91,7 @@
                 });
 
                 renderPlayer();
+                renderPoints();
                 checkCollisions();
             }, 10);
 
@@ -97,43 +103,27 @@
                 spawnObstacles();
             }, 3000);
 
+            function renderPoints() {
+                context.fillStyle = "green";
+                context.font = "36px serif";
+                context.fillText(`Points: ${points}`, 10, 40);
+            }
+
             function renderPlayer() {
                 context.beginPath();
-                context.fillStyle = "green";
-                context.rect(playerX, playerY, playerWidth, playerHeight);
-                context.fill();
-                context.stroke();
-                context.closePath();
-
-                context.beginPath();
-                context.fillStyle = "black";
-                context.arc(
-                    playerX + playerWidth - 5,
-                    playerY - 10 + playerHeight,
-                    20,
-                    0,
-                    2 * Math.PI
+                context.drawImage(
+                    carImg,
+                    playerX,
+                    playerY,
+                    playerWidth,
+                    playerHeight
                 );
-                context.fill();
-                context.stroke();
-                context.closePath();
-
-                context.beginPath();
-                context.fillStyle = "black";
-                context.arc(
-                    playerX + 5,
-                    playerY - 10 + playerHeight,
-                    20,
-                    0,
-                    2 * Math.PI
-                );
-                context.fill();
-                context.stroke();
                 context.closePath();
             }
 
             function shootProjectile() {
                 projectiles.push(new Projectile());
+                console.log("new");
             }
 
             function deleteProjectile(projectile) {
