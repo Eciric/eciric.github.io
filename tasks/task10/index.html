@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="myCanvas" width="800" height="600"></canvas>
+        <script>
+            const canvas = document.getElementById("myCanvas");
+            const context = canvas.getContext("2d");
+
+            const keycodes = {
+                space: 32,
+                c: 67,
+            };
+
+            const roadStripeWidth = 100;
+            const roadStripeHeight = 50;
+
+            const playerWidth = 150;
+            const playerHeight = 75;
+
+            let playerY = 465;
+            const playerX = 50;
+            const jumpHeight = playerY - 350;
+
+            let falling = false;
+            let jumpIntervalId = null;
+            canvas.style.background = "gray";
+            let points = 0;
+
+            const obstacles = [];
+            const roadStripes = [];
+            const projectiles = [];
+
+            document.onkeyup = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.space) {
+                    if (!jumpIntervalId) {
+                        jumpIntervalId = setInterval(() => {
+                            if (playerY > jumpHeight && !falling) {
+                                playerY -= 5;
+                            } else {
+                                falling = true;
+                                playerY += 5;
+
+                                if (playerY === 465) {
+                                    clearInterval(jumpIntervalId);
+                                    jumpIntervalId = null;
+                                    falling = false;
+                                }
+                            }
+                        }, 10);
+                    }
+                }
+            };
+
+            document.onkeypress = (e) => {
+                e = e || window.event;
+
+                if (e.keyCode == keycodes.c) {
+                    shootProjectile();
+                }
+            };
+
+            const mainIntervalId = setInterval(() => {
+                renderSideLine();
+                roadStripes.forEach((roadStripe) => {
+                    roadStripe.render();
+                    checkRoadStripeBoundaries(roadStripe);
+                });
+
+                projectiles.forEach((projectile) => {
+                    projectile.renderProjectile();
+                });
+
+                obstacles.forEach((obstacle) => {
+                    obstacle.render();
+                    checkObstacleBoundaries(obstacle);
+                });
+
+                renderPlayer();
+                checkCollisions();
+            }, 10);
+
+            const spawnerIntervalId = setInterval(() => {
+                spawnRoadStripes();
+            }, 500);
+
+            const obstacleSpawnerIntervalId = setInterval(() => {
+                spawnObstacles();
+            }, 3000);
+
+            function renderPlayer() {
+                context.beginPath();
+                context.fillStyle = "green";
+                context.rect(playerX, playerY, playerWidth, playerHeight);
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(
+                    playerX + playerWidth - 5,
+                    playerY - 10 + playerHeight,
+                    20,
+                    0,
+                    2 * Math.PI
+                );
+                context.fill();
+                context.stroke();
+                context.closePath();
+
+                context.beginPath();
+                context.fillStyle = "black";
+                context.arc(
+                    playerX + 5,
+                    playerY - 10 + playerHeight,
+                    20,
+                    0,
+                    2 * Math.PI
+                );
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function shootProjectile() {
+                projectiles.push(new Projectile());
+            }
+
+            function deleteProjectile(projectile) {
+                const index = projectiles.indexOf(projectile);
+                projectiles.splice(index, 1);
+                delete projectile;
+            }
+
+            function spawnRoadStripes() {
+                roadStripes.push(new RoadStripe());
+            }
+
+            function checkRoadStripeBoundaries(roadStripe) {
+                if (roadStripe.x + roadStripeWidth < 0) {
+                    deleteRoadStripe(roadStripe);
+                }
+            }
+
+            function checkObstacleBoundaries(obstacle) {
+                if (obstacle.x + obstacle.width < 0) {
+                    deleteObstacle(obstacle);
+                }
+            }
+
+            function renderSideLine() {
+                context.clearRect(0, 0, canvas.width, canvas.height);
+                context.beginPath();
+                context.fillStyle = "red";
+                context.rect(0, canvas.height - 50, canvas.width, 50);
+                context.fill();
+                context.stroke();
+                context.closePath();
+            }
+
+            function getRandomInt(min, max) {
+                min = Math.ceil(min);
+                max = Math.floor(max);
+                return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
+            }
+
+            function checkCollisions() {
+                obstacles.forEach((obstacle) => {
+                    if (isColliding(obstacle)) {
+                        deleteObstacle(obstacle);
+                        clearInterval(mainIntervalId);
+                        clearInterval(spawnerIntervalId);
+                        clearInterval(obstacleSpawnerIntervalId);
+                        displayDefeat();
+                    }
+                });
+
+                projectiles.forEach((projectile) => {
+                    obstacles.forEach((obstacle) => {
+                        if (hitObstacle(projectile, obstacle)) {
+                            deleteObstacle(obstacle);
+                            deleteProjectile(projectile);
+                            points++;
+                        }
+                    });
+                });
+            }
+
+            const hitObstacle = (projectile, obstacle) => {
+                return (
+                    projectile.x < obstacle.x + obstacle.width &&
+                    projectile.x + projectile.width > obstacle.x &&
+                    projectile.y < obstacle.y + obstacle.height &&
+                    projectile.y + projectile.height > obstacle.y
+                );
+            };
+
+            function displayDefeat() {
+                context.font = "48px serif";
+                context.fillStyle = "red";
+                context.fillText(
+                    "Defeat",
+                    canvas.width / 2 - 50,
+                    canvas.height / 2
+                );
+            }
+
+            const isColliding = (obstacle) => {
+                return (
+                    playerX < obstacle.x + obstacle.width &&
+                    playerX + playerWidth > obstacle.x &&
+                    playerY < obstacle.y + obstacle.height &&
+                    playerHeight + playerY > obstacle.y
+                );
+            };
+
+            function spawnObstacles() {
+                if (obstacles.length < 4) obstacles.push(new Obstacle());
+            }
+
+            function getRandomColor() {
+                return (
+                    "#" +
+                    (0x1000000 + Math.random() * 0xffffff)
+                        .toString(16)
+                        .substr(1, 6)
+                );
+            }
+
+            function deleteRoadStripe(roadStripe) {
+                const index = roadStripes.indexOf(roadStripe);
+                roadStripes.splice(index, 1);
+                delete roadStripe;
+            }
+
+            function deleteObstacle(obstacle) {
+                const index = obstacles.indexOf(obstacle);
+                obstacles.splice(index, 1);
+                delete obstacle;
+            }
+
+            class RoadStripe {
+                constructor() {
+                    this.x = canvas.width + roadStripeWidth;
+                    this.color = "white";
+                    this.y = canvas.height - roadStripeHeight;
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.x -= 10;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(
+                        this.x,
+                        this.y,
+                        roadStripeWidth,
+                        roadStripeHeight
+                    );
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Obstacle {
+                constructor() {
+                    this.color = getRandomColor();
+                    this.speed = 3;
+                    this.width = 50;
+                    this.height = 100;
+                    this.x = canvas.width + 500;
+                    this.y = 450;
+                }
+
+                getY() {
+                    return this.y;
+                }
+
+                getX() {
+                    return this.x;
+                }
+
+                move() {
+                    this.x -= this.speed;
+                }
+
+                render() {
+                    context.beginPath();
+                    this.move();
+                    context.fillStyle = this.color;
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+
+            class Projectile {
+                constructor() {
+                    this.height = 5;
+                    this.width = 15;
+                    this.x = playerX;
+                    this.y = playerY + playerHeight / 2;
+                }
+
+                moveProjectile() {
+                    this.x += 15;
+                }
+
+                renderProjectile() {
+                    context.beginPath();
+                    this.moveProjectile();
+                    context.fillStyle = "yellow";
+                    context.rect(this.x, this.y, this.width, this.height);
+                    context.fill();
+                    context.stroke();
+                    context.closePath();
+                }
+            }
+        </script>
+    </body>
+</html>
